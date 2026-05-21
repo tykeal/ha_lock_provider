@@ -95,8 +95,8 @@
 - The library MUST NOT enforce a slot-numbering scheme or
   managed-slot range. Range-aware operations take the managed
   range as a caller-supplied parameter.
-- Provider clients MUST return primitive types (plain
-  `dataclass`, `list`, `dict`) only. Consumer-specific
+- Provider clients MUST return simple Python data structures
+  (plain `dataclass`, `list`, `dict`) only. Consumer-specific
   sentinel enums and wrapper types are PROHIBITED in library
   return values.
 - The library MAY import from `homeassistant.core` and call

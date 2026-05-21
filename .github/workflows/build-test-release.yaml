@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2026 Andrew Grimberg <tykeal@bardicgrove.org>
 # SPDX-License-Identifier: Apache-2.0
 
-# Runs on a new pull request, performs build and runs tests
+# Runs on tag pushes, then builds, tests, and publishes releases
 name: 'Python Build/Test/Release'
 
 # yamllint disable-line rule:truthy

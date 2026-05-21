@@ -20,8 +20,10 @@ concurrency:
 jobs:
   semantic-pull-request:
     name: "Semantic Pull Request"
+    if: github.actor != 'dependabot[bot]'
     permissions:
       contents: read
+      pull-requests: read
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:

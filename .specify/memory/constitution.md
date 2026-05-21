@@ -469,14 +469,14 @@ when two upstream consumer projects merge library updates.
   annotation coverage enforced by mypy. The supported Python
   version matrix MUST match the versions Home Assistant
   itself supports at the time of each release.
-- **Package Layout**: The project uses a `src/` + `tests/`
-  layout. The package source lives under `src/ha_lock_provider/`
-  and tests under `tests/`. The library is NOT a Home
-  Assistant custom component — it is a pure Python library
-  distributed via PyPI.
-- **Dependency Management**: Dependencies MUST be managed
-  via `uv`. A locked dependency file (`uv.lock`) MUST be
-  committed to the repository.
+- **Package Layout**: Phase 1 Bootstrap MUST establish a
+  `src/` + `tests/` layout. The package source MUST live
+  under `src/ha_lock_provider/` and tests under `tests/`.
+  The library is NOT a Home Assistant custom component — it
+  is a pure Python library intended for PyPI distribution.
+- **Dependency Management**: Phase 1 Bootstrap MUST manage
+  dependencies via `uv` and commit a locked dependency file
+  (`uv.lock`) to the repository.
 - **Home Assistant Coupling**: The library MAY import
   `homeassistant.core.HomeAssistant` and call
   `hass.services.async_call(...)`. It MUST NOT import from
@@ -518,10 +518,11 @@ when two upstream consumer projects merge library updates.
 2. **Implement** the minimum code required to make those
    tests pass (TDD green).
 3. **Refactor** while keeping all tests green.
-4. **Run linting & type checks** locally:
+4. **Run linting & type checks** locally once Phase 1
+   Bootstrap has created `src/` and `tests/`:
    `uv run ruff check src/ tests/` and `uv run mypy src/`.
-5. **Run the test suite** locally:
-   `uv run pytest tests/ -x -q`.
+5. **Run the test suite** locally once Phase 1 Bootstrap has
+   created `tests/`: `uv run pytest tests/ -x -q`.
 6. **Stage and commit atomically** with sign-off, the
    appropriate `Co-authored-by` trailer (per `AGENTS.md`),
    and SPDX headers on any new files.

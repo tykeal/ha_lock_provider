@@ -406,10 +406,11 @@ nobody can audit.
   (one feature, one fix, or one refactor).
 - Each commit MUST compile and run successfully; broken
   intermediate states are PROHIBITED.
-- Commit messages MUST follow Conventional Commits with
-  capitalized types as defined in `AGENTS.md` and `.gitlint`
-  (types: `Fix`, `Feat`, `Chore`, `Docs`, `Style`,
-  `Refactor`, `Perf`, `Test`, `Revert`, `CI`, `Build`).
+- Commit messages MUST follow this repository's
+  Conventional Commit-style format with capitalized types as
+  defined in `AGENTS.md` and `.gitlint` (types: `Fix`,
+  `Feat`, `Chore`, `Docs`, `Style`, `Refactor`, `Perf`,
+  `Test`, `Revert`, `CI`, `Build`).
 - Subject lines MUST be ≤50 characters and MUST NOT end with
   a period. Body lines MUST wrap at ≤72 characters (URL
   lines are exempt per the configured `ignore-by-body`

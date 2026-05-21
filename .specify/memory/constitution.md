@@ -448,9 +448,10 @@ consumer.
   `AGENTS.md` table for the canonical email mapping for
   Claude, ChatGPT, Gemini, and Copilot).
 - Every commit MUST carry a DCO sign-off added via
-  `git commit -s`:
+  `git commit -s` using the committer's own configured
+  identity:
   ```
-  Signed-off-by: Andrew Grimberg <tykeal@bardicgrove.org>
+  Signed-off-by: Your Name <you@example.com>
   ```
 - The `Co-authored-by` trailer goes in the commit message
   body; `git commit -s` appends the `Signed-off-by` line

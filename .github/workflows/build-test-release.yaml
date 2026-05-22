@@ -443,6 +443,7 @@ jobs:
     environment:
       name: 'production'
     permissions:
+      attestations: write
       contents: read
       id-token: write  # IMPORTANT: mandatory for trusted publishing
     timeout-minutes: 5

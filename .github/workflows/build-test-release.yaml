@@ -23,6 +23,7 @@ jobs:
     name: "Repository Metadata"
     runs-on: ubuntu-latest
     permissions:
+      actions: write
       contents: read
       pull-requests: read
     timeout-minutes: 5
@@ -117,6 +118,7 @@ jobs:
       artefact_name: "${{ steps.python-build.outputs.artefact_name }}"
       artefact_path: "${{ steps.python-build.outputs.artefact_path }}"
     permissions:
+      actions: write
       contents: read
       id-token: write       # Needed for attestations
       attestations: write   # Needed for attestations
@@ -226,6 +228,7 @@ jobs:
       && needs.python-build.outputs.artefact_name != ''
     timeout-minutes: 10
     permissions:
+      actions: write
       contents: read
     steps:
       # Harden the runner used by this workflow
@@ -270,6 +273,7 @@ jobs:
     needs: 'sbom'
     timeout-minutes: 10
     permissions:
+      actions: write
       contents: read
     steps:
       # Harden the runner used by this workflow
@@ -505,6 +509,7 @@ jobs:
       - 'pypi'
     # yamllint disable-line rule:line-length
     permissions:
+      actions: read
       contents: write  # IMPORTANT: needed to edit release, attach artefacts
     timeout-minutes: 5
     env:

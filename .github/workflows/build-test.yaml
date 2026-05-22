@@ -31,6 +31,7 @@ jobs:
     name: "Repository Metadata"
     runs-on: ubuntu-latest
     permissions:
+      actions: write
       contents: read
       pull-requests: read
     timeout-minutes: 5
@@ -150,6 +151,7 @@ jobs:
       artefact_name: "${{ steps.python-build.outputs.artefact_name }}"
       artefact_path: "${{ steps.python-build.outputs.artefact_path }}"
     permissions:
+      actions: write
       contents: read
     timeout-minutes: 12
     steps:
@@ -252,6 +254,7 @@ jobs:
       && needs.python-build.outputs.artefact_name != ''
     timeout-minutes: 10
     permissions:
+      actions: write
       contents: read
     steps:
       # Harden the runner used by this workflow
@@ -297,6 +300,7 @@ jobs:
     if: ${{ !cancelled() && needs.sbom.result == 'success' }}
     timeout-minutes: 10
     permissions:
+      actions: write
       contents: read
     steps:
       # Harden the runner used by this workflow

@@ -133,8 +133,20 @@ jobs:
       # yamllint disable-line rule:line-length
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
+      - name: 'Detect Python project'
+        id: python-project
+        run: |
+          if [ -f pyproject.toml ]; then
+            echo 'has_project=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'has_project=false' >> "$GITHUB_OUTPUT"
+            echo 'No root pyproject.toml found; skipping Python build.' \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: 'Build Python project'
         id: 'python-build'
+        if: steps.python-project.outputs.has_project == 'true'
         # yamllint disable-line rule:line-length
         uses: lfreleng-actions/python-build-action@38b9a4e7ee34e56d178f5bd248df52e41f7d496e  # v1.0.6
         with:
@@ -145,6 +157,10 @@ jobs:
     name: 'Python Tests'
     runs-on: 'ubuntu-latest'
     needs: 'python-build'
+    if: >-
+      !cancelled()
+      && needs.python-build.result == 'success'
+      && needs.python-build.outputs.matrix_json != ''
     # Matrix job
     strategy:
       fail-fast: false
@@ -172,6 +188,10 @@ jobs:
     name: 'Python Audit'
     runs-on: 'ubuntu-latest'
     needs: 'python-build'
+    if: >-
+      !cancelled()
+      && needs.python-build.result == 'success'
+      && needs.python-build.outputs.matrix_json != ''
     # Matrix job
     strategy:
       fail-fast: false
@@ -200,6 +220,10 @@ jobs:
     name: 'Generate SBOM'
     runs-on: ubuntu-latest
     needs: 'python-build'
+    if: >-
+      !cancelled()
+      && needs.python-build.result == 'success'
+      && needs.python-build.outputs.artefact_name != ''
     timeout-minutes: 10
     permissions:
       contents: read

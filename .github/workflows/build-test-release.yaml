@@ -7,10 +7,10 @@ name: 'Python Build/Test/Release'
 
 # yamllint disable-line rule:truthy
 on:
-  # Trigger on tag push events
+  # Trigger on release tag push events
   push:
     tags:
-      - '**'
+      - 'v*'
 
 permissions: {}
 

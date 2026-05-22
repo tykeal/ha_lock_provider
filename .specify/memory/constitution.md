@@ -1,6 +1,21 @@
 <!--
   Sync Impact Report
   ==================================================
+  Version change: 1.0.1 → 1.0.2
+  Change type: PATCH — editorial cleanup; no principles or
+  guidance changed.
+
+  Modified sections:
+    - Principle I rationale, Phase 3 (Akuvox) bullet, and
+      Principle IX regression-test bullet: removed references
+      to external repository pull requests so the constitution
+      does not depend on out-of-repo issue numbering. Hardware
+      model identifiers are retained as they are product
+      references, not PR/issue pointers.
+
+  No template propagation required.
+
+  ==================================================
   Version change: 1.0.0 → 1.0.1
   Change type: PATCH — clarifications and missing-coverage
   additions; no principle removed or materially redefined.
@@ -112,7 +127,7 @@ translation code remains structurally similar. The shared
 engineering value lives in the transport layer; merging
 orchestration would force one project to adopt the other's
 architecture. A thin, neutral transport library captures the
-shared value (PR #616 multi-firmware Akuvox detection, BE469
+shared value (Akuvox multi-firmware detection, BE469
 clear-verification workaround, Schlage add-before-delete with
 rollback, Z-Wave User Code CC version gating, activity-map
 translation) without imposing architectural decisions on
@@ -269,8 +284,8 @@ forcing global upgrades on every consumer.
      package skeleton, placeholder PyPI release.
   2. **Pure utilities** — `exceptions`, `tags`
      (parameterized prefix), `rate_limiter`, `models.UserCode`.
-  3. **Akuvox** — smallest real client; PR #616
-     multi-firmware fix lifted verbatim.
+  3. **Akuvox** — smallest real client; multi-firmware
+     detection fix lifted verbatim.
   4. **Schlage** — add-before-delete with rollback and
      eventual-consistency / 409 handling.
   5. **Z-Wave JS** — staged as (5a) activity tables +
@@ -388,7 +403,7 @@ consumer protection.
   change; coverage regressions MUST be justified and
   approved.
 - Regression tests covering verbatim-lifted workarounds
-  (PR #616 Akuvox multi-firmware detection, BE469 Z-Wave
+  (Akuvox multi-firmware detection, BE469 Z-Wave
   clear verification, Schlage add-before-delete rollback)
   MUST exist before that workaround can be considered
   "extracted" into the library.
@@ -590,4 +605,4 @@ when two upstream consumer projects merge library updates.
   recovery, worktree placement) that supplements this
   constitution.
 
-**Version**: 1.0.1 | **Ratified**: 2026-05-21 | **Last Amended**: 2026-05-21
+**Version**: 1.0.2 | **Ratified**: 2026-05-21 | **Last Amended**: 2026-05-22

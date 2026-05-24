@@ -1,6 +1,78 @@
 <!--
   Sync Impact Report
   ==================================================
+  Version change: 1.0.2 → 1.1.0
+  Change type: MINOR — Principle I expanded and Principle V
+  rewritten to reflect Home Assistant's runtime dependency
+  model. No principle removed.
+
+  Modified principles / sections:
+    - Principle I (Library Scope Discipline): split the
+      slot-state-semantics prohibition. `Synced` (and any
+      equivalent desired-vs-observed lifecycle sentinel)
+      remains consumer policy. Empty-slot and
+      unreadable-code markers are now REQUIRED of the
+      library as canonical representations of universal
+      platform realities, so consumers do not reimplement
+      provider-specific detection. Return-type rule
+      reworded to permit library-defined and standard-
+      library types; only consumer-defined types remain
+      PROHIBITED. HA-aware bullet updated to require lazy
+      vendor-SDK imports.
+    - Principle V (renamed "Vendor SDK Imports and Optional
+      Extras"): vendor SDKs MUST NOT be required runtime
+      dependencies of the base install; provider modules
+      MUST import SDKs lazily inside the code path that
+      needs them, relying on HA's transitively-installed
+      versions. Optional extras retained as a convenience
+      for standalone / test / type-check use only.
+      Version-bound discipline retained for whatever the
+      library does declare.
+    - Principle I rationale extended to include canonical
+      empty / unreadable recognition in the list of shared
+      engineering value.
+
+  Pre-commit review refinements (still v1.1.0; same
+  diff/PR; no separate version bump):
+    - Principle I (return-types bullet) made RECURSIVE:
+      nested fields, container elements, and transitively
+      reachable values must also be library-defined or
+      standard-library types. Embedding vendor SDK or
+      HA-component types inside a library DTO is
+      PROHIBITED.
+    - Principle V lazy-import rule extended to cover HA
+      platform-specific component/helper modules (e.g.,
+      `homeassistant.components.matter.*` helpers), not
+      just vendor SDKs. `homeassistant.core` /
+      `homeassistant.helpers` and stdlib MAY remain at
+      module top level. Annotation-evaluation guidance
+      added (`from __future__ import annotations` or
+      quoted annotations when type-only vendor imports
+      are used).
+    - Principle V actionable-error contract specified:
+      library-defined
+      exception, names provider and missing import,
+      includes remediation guidance for
+      both HA and standalone installs, chains the
+      original `ImportError`.
+    - Principle V runtime-compatibility validation made
+      explicit: either provider-tests-in-repo with real
+      SDK installed via extras, or consumer integration
+      tests against SDK versions in the HA matrix.
+      Releases that cannot satisfy either MUST document
+      the gap and pass the dual-maintainer gate.
+    - Principle I canonical-markers bullet: criterion
+      added for future expansion
+      (cross-provider observable device fact, exposed by
+      ≥2 providers; consumer lifecycle semantics
+      PROHIBITED as canonical markers).
+    - Additional Constraints "Vendor SDK Coupling"
+      bullet updated to match new Principle V wording
+      (lazy / provider-scoped, optional extras).
+
+  No template propagation required.
+
+  ==================================================
   Version change: 1.0.1 → 1.0.2
   Change type: PATCH — editorial cleanup; no principles or
   guidance changed.
@@ -68,6 +140,8 @@
     - tasks-template.md ✅ reviewed, no change
     - checklist-template.md ✅ reviewed, no change
 
+  No template propagation required.
+
   Deferred items / Follow-up TODOs:
     - Org-hosting model (neutral GitHub org vs. hosting
       under one consumer's org) remains deferred and MUST
@@ -98,10 +172,30 @@
   base-class shape, or provider lifecycle model. KM and LCM
   retain their own coordinators, slot-state semantics, and
   lifecycle management.
-- The library MUST NOT define or enforce slot-state semantics
-  (e.g., `Synced`, `SlotCode.EMPTY`, `SlotCode.UNREADABLE_CODE`
-  sentinels are consumer policy and remain in the consuming
-  project).
+- The library MUST NOT define or enforce consumer
+  lifecycle / readiness semantics. A `Synced` sentinel (or
+  any equivalent expressing whether a slot's desired state
+  matches the device's observed state) is consumer policy
+  and remains in the consuming project, because only the
+  consumer knows the desired state.
+- The library MUST provide canonical representations for
+  universal platform realities about user-code slots — at
+  minimum, an empty-slot marker and an unreadable-code
+  marker (covering, for example, the Z-Wave `****` masked-
+  PIN response or a Matter slot reported occupied without a
+  readable PIN). These are observable facts about the
+  device, not consumer policy. Centralizing recognition of
+  these states is a primary reason for the library to
+  exist; consumers MUST NOT need to reimplement provider-
+  specific detection of these states. Consumers MAY
+  translate library markers into their own vocabulary.
+  Additional canonical markers MAY be added in future
+  releases only when they represent cross-provider
+  observable device facts — i.e., the marker corresponds
+  to a state the device or vendor SDK reports directly,
+  and at least two providers expose an equivalent
+  condition. Consumer lifecycle / desired-state
+  semantics MUST NOT be added as canonical markers.
 - The library MUST NOT fire project-specific events
   (e.g., `keymaster_lock_state_changed`, `lcm_*` events).
   Provider clients expose primitive event-subscription
@@ -110,15 +204,33 @@
 - The library MUST NOT enforce a slot-numbering scheme or
   managed-slot range. Range-aware operations take the managed
   range as a caller-supplied parameter.
-- Provider clients MUST return simple Python data structures
-  (plain `dataclass`, `list`, `dict`) only. Consumer-specific
-  sentinel enums and wrapper types are PROHIBITED in library
-  return values.
+- Provider clients MUST return only library-defined or
+  standard-library types. Library-defined `dataclass`
+  instances, `enum` members (including the empty /
+  unreadable markers above), plain classes, `list`,
+  `dict`, and primitive scalars are all permitted. This
+  rule is RECURSIVE: nested fields, container elements,
+  and any other values transitively reachable through a
+  return value MUST also be library-defined or standard-
+  library types. Returning — or embedding inside a return
+  value — any consumer-defined type (e.g., Keymaster's
+  `Synced` sentinel, LCM-specific coordinator wrappers),
+  vendor SDK type (e.g., `zwave_js_server.Driver`,
+  `matter_server.Lock`), or HA-component-specific type
+  is PROHIBITED. Library DTOs, enums, and scalars MUST
+  be used to surface any data sourced from these types.
+  Combined with the import prohibition above, this
+  preserves library neutrality, prevents circular
+  dependencies between the library and either consumer,
+  and allows modules using vendor types in annotations to
+  rely on `from __future__ import annotations` or quoted
+  annotations rather than runtime imports.
 - The library MAY import from `homeassistant.core` and call
-  `hass.services.async_call(...)` — it is an HA-aware library,
-  not an HA-agnostic one. Vendor SDK imports (e.g.,
-  `zwave_js_server`, `matter_server`) MUST be optional
-  (see Principle V).
+  `hass.services.async_call(...)` — it is an HA-aware
+  library, not an HA-agnostic one. Vendor SDK imports
+  (e.g., `zwave_js_server`, `matter_server`, `zigpy`)
+  MUST be lazy and MUST NOT be required runtime
+  dependencies of the base install (see Principle V).
 
 **Rationale**: KM and LCM have diverged substantially at the
 orchestration layer (coordinator model, return shapes,
@@ -130,8 +242,9 @@ architecture. A thin, neutral transport library captures the
 shared value (Akuvox multi-firmware detection, BE469
 clear-verification workaround, Schlage add-before-delete with
 rollback, Z-Wave User Code CC version gating, activity-map
-translation) without imposing architectural decisions on
-either consumer.
+translation, and canonical empty / unreadable-code
+recognition across providers) without imposing architectural
+decisions on either consumer.
 
 ### II. Backward-Compatible Tag Formats (NON-NEGOTIABLE)
 
@@ -236,45 +349,100 @@ simultaneously. Dual-consumer validation before tagging — and
 a real deprecation window before removals — is the only
 sustainable cadence for joint maintenance.
 
-### V. Per-Provider Optional Extras
+### V. Vendor SDK Imports and Optional Extras
 
 - Vendor SDK and platform-specific dependencies (e.g.,
-  `zwave-js-server-python`, `matter-server`, `python-matter-server`,
-  `zigpy`, `paho-mqtt`, and similar) MUST be declared as
-  **optional extras** in `pyproject.toml`, not as required
-  dependencies.
-- The base install (`pip install ha_lock_provider`) MUST be
-  lightweight and MUST NOT pull in any vendor SDK that is not
-  required by every consumer.
-- Each provider package MUST declare its own extra
-  (e.g., `ha_lock_provider[akuvox]`,
-  `ha_lock_provider[zwave_js]`, `ha_lock_provider[matter]`,
-  `ha_lock_provider[zha]`, `ha_lock_provider[zigbee2mqtt]`,
-  `ha_lock_provider[virtual]`).
-- Importing a provider module without its extras installed
-  MUST raise an actionable `ImportError` (or equivalent
-  diagnostic) naming the missing extra and the install
-  command.
-- An `all` extra MAY be provided for convenience; it MUST NOT
-  be the default install.
-- **Dependency version policy**: Home Assistant core and
-  every optional vendor SDK extra MUST declare explicit
-  lower and upper version bounds compatible with the
-  supported HA / Python matrix. Unbounded
-  (`>=X`-only) declarations on HA core or vendor SDKs are
-  PROHIBITED. Dependency-bound changes (raising a lower
-  bound, raising an upper cap, dropping a Python or HA
-  minor) MUST be listed in the CHANGELOG and validated
-  against both KM's and LCM's test suites before release
-  (see Principle IV).
+  `zwave-js-server-python`, `python-matter-server`, `zigpy`,
+  `paho-mqtt`, and similar) MUST NOT be required runtime
+  dependencies of the base `ha_lock_provider` install. In
+  Home Assistant, these SDKs are installed transitively by
+  the integration whose locks are present; the library
+  relies on that environment-provided installation rather
+  than vending its own copies.
+- Each provider module MUST import its vendor SDK and any
+  Home Assistant platform-specific component/helper
+  modules (e.g., `homeassistant.components.matter.*`
+  helpers, `homeassistant.components.zwave_js.*` helpers)
+  lazily — inside the function, method, or class that
+  needs them, not at module top level — so importing
+  `ha_lock_provider` (or a sibling provider module) never
+  fails because an unrelated SDK or HA component is
+  absent. Type-only imports for static analysis MAY appear
+  under `if TYPE_CHECKING:` blocks; modules relying on
+  such imports for annotations MUST also use
+  `from __future__ import annotations` or quoted
+  annotations so annotation evaluation does not force a
+  runtime import.
+- Imports from `homeassistant.core`, `homeassistant.helpers`
+  (generic helpers, not platform-specific component
+  helpers), and Python standard library MAY remain at
+  module top level — these are always available in any HA
+  install regardless of which lock integrations are
+  enabled.
+- Optional extras MAY be declared (e.g.,
+  `ha_lock_provider[zwave_js]`,
+  `ha_lock_provider[matter]`,
+  `ha_lock_provider[zha]`,
+  `ha_lock_provider[zigbee2mqtt]`,
+  `ha_lock_provider[akuvox]`,
+  `ha_lock_provider[virtual]`, and an aggregate
+  `ha_lock_provider[all]` or `[dev]`) as a convenience for:
+  (a) standalone use outside Home Assistant, (b) CI / test
+  environments that exercise provider code paths without a
+  running HA instance, and (c) type-checking. Extras MUST
+  NOT be required for in-HA operation and MUST NOT be the
+  default install.
+- When a lazy import fails at point of use, provider code
+  MUST raise a library-defined exception (rooted in the
+  library's exception hierarchy, not a bare `ImportError`)
+  that:
+    - names the provider whose code path triggered the
+      failure,
+    - names the missing import or PyPI distribution,
+    - includes remediation guidance — typically directing
+      the user to ensure the corresponding Home Assistant
+      integration is installed and loaded for that lock
+      platform, with the equivalent `pip install
+      ha_lock_provider[<provider>]` for standalone use,
+    - chains the original `ImportError` via `raise ... from
+      err` so the underlying cause is preserved.
+- **Dependency version policy**: Any version bound the
+  library *does* declare — for Home Assistant core in the
+  base install, and for vendor SDKs in optional extras
+  where extras are provided — MUST be an explicit lower
+  AND upper bound compatible with the supported HA /
+  Python matrix. Unbounded (`>=X`-only) declarations are
+  PROHIBITED on any declared dependency.
+- **Vendor SDK runtime-compatibility validation**: Because
+  vendor SDKs are not declared as runtime dependencies of
+  the base install, runtime SDK compatibility MUST be
+  validated for every release that touches provider code.
+  Validation MUST come from at least one of:
+    1. provider-specific tests in this repository that
+       install the relevant extras and exercise the
+       provider code path against real SDK imports
+       (mocked transports / fakes are acceptable for
+       network and hardware boundaries, but the SDK
+       itself MUST be the real installed version);
+    2. consumer integration tests in KM and LCM that
+       exercise the affected provider against the SDK
+       versions present in the supported HA / Python
+       matrix.
+  Releases that cannot satisfy at least one of the above
+  for a touched provider MUST document the gap in the
+  changelog and MUST be approved by the dual-maintainer
+  release gate (see Governance).
 
-**Rationale**: Consumers should not be forced to install
-Matter SDKs to use Akuvox, or Zigbee stacks to use Schlage.
-Per-provider extras keep the base install lightweight, keep
-the dependency graph small for embedded HA installs (e.g.,
-Home Assistant Yellow, HA Green, Raspberry Pi), and let the
-library evolve provider-specific dependencies without
-forcing global upgrades on every consumer.
+**Rationale**: In a Home Assistant deployment, the universe
+of vendor SDKs available at runtime is determined by which
+integrations the user has enabled — installing
+`ha_lock_provider` cannot and should not modify that. Lazy
+imports inside provider-specific code paths cleanly express
+"this code only runs when the corresponding HA integration
+is present", avoiding both unnecessary install-time deps
+and import-time failures. Optional extras remain useful for
+standalone / test contexts (and for static type-checking)
+but are explicitly *not* required for in-HA operation.
 
 ### VI. Phased Delivery
 
@@ -497,9 +665,14 @@ when two upstream consumer projects merge library updates.
   `hass.services.async_call(...)`. It MUST NOT import from
   KM, LCM, or any other consumer-specific package. See
   Principle I.
-- **Vendor SDK Coupling**: Vendor SDK imports MUST be
-  guarded by per-provider extras (Principle V). The base
-  install MUST NOT pull in vendor SDKs.
+- **Vendor SDK Coupling**: Vendor SDK imports (and any
+  Home Assistant platform-specific component/helper
+  imports, such as `homeassistant.components.matter.*`
+  helpers) MUST be lazy and provider-scoped (Principle V).
+  Vendor SDKs MUST NOT be required runtime dependencies of
+  the base install. Optional extras MAY be declared as a
+  convenience but MUST NOT be required for in-HA
+  operation.
 - **Backward Compatibility**: The `[KM:N]` and `[LCM:N]` tag
   formats are user-visible artifacts on lock devices in
   production. Changes that alter their byte-level
@@ -605,4 +778,6 @@ when two upstream consumer projects merge library updates.
   recovery, worktree placement) that supplements this
   constitution.
 
-**Version**: 1.0.2 | **Ratified**: 2026-05-21 | **Last Amended**: 2026-05-22
+**Version**: 1.1.0
+**Ratified**: 2026-05-21
+**Last Amended**: 2026-05-22

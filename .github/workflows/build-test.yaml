@@ -179,7 +179,7 @@ jobs:
         id: python-build
         if: steps.python-project.outputs.has_project == 'true'
         # yamllint disable-line rule:line-length
-        uses: lfreleng-actions/python-build-action@38b9a4e7ee34e56d178f5bd248df52e41f7d496e  # v1.0.6
+        uses: lfreleng-actions/python-build-action@97cf36d2a5914c94761408545d154c983024de1d  # v2.0.0
 
   python-tests:
     name: 'Python Tests'
